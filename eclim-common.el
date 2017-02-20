@@ -346,6 +346,9 @@ argument expansion, error checking, and some other niceties."
       (progn (eclim--call-process "ping") t)
     ('eclim--connection-refused-error nil)))
 
+;; (eclim/execute-command "project_by_resource" ("-f" "/data/github/spark/hive/common/src/java/org/apache/hive/http/HttpServer.java"))
+;; (eclim/execute-command "project_link_resource" ("-f" "/data/github/spark/hive/common/src/java/org/apache/hive/http/HttpServer.java"))
+
 (defun eclim-project-name (&optional filename)
   "Return a file's project name.
 If the optional argument FILENAME is given, return that
@@ -506,9 +509,18 @@ the output from eclim is returned as a string."
 
 (defun eclim--project-current-file ()
   "Return the path of the current file relative to the project."
+  (interactive)
   (or eclim--project-current-file
+
+      ;; git dir is /data/github/spark/hive, maven module is /data/github/spark/hive/common, name is hive-common
+      ;; but eclim--project-current-file is mistakenly set to "common/src/java/org/apache/hive/http/HttpServer.java"
+      ;; the correct value is "src/java/org/apache/hive/http/HttpServer.java"
+
+      ;; (setq eclim--project-current-file
+      ;;       (eclim/execute-command "project_link_resource" ("-f" buffer-file-name)))
       (setq eclim--project-current-file
-            (eclim/execute-command "project_link_resource" ("-f" buffer-file-name)))
+            (substring (buffer-file-name) (1+ (length (eclim--project-dir eclim--project-name))) nil))
+
       ;; command archive_read will extract archive file to /tmp directory, which is out of current project directory.
       (and buffer-file-name (gethash buffer-file-name eclim-projects-for-archive-file) buffer-file-name)))
 
